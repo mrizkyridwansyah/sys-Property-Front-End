@@ -9,12 +9,16 @@ export function useAuth() {
 function login(email, password) {
     return queryFetchNonAuth(`mutation {
         login(email: "${email}", password: "${password}") {
+            user_id,
+            role_id,
             access_token,
             refresh_token
         }
     }`).then(data => {
         console.log(data)
         if(data.errors) throw new Error(data.errors[0].message)        
+        sessionStorage.setItem('user_id', data.data.login.user_id)
+        sessionStorage.setItem('role_id', data.data.login.role_id)
         sessionStorage.setItem('access_token', data.data.login.access_token)
         sessionStorage.setItem('refresh_token', data.data.login.refresh_token)
     })
@@ -27,7 +31,9 @@ function logout(token) {
             refresh_token
         }
     }`).then(data => {
-        if(data.errors) throw new Error(data.errors[0].message)        
+        // if(data.errors) throw new Error(data.errors[0].message)        
+        sessionStorage.removeItem('user_id')
+        sessionStorage.removeItem('role_id')
         sessionStorage.removeItem('access_token')
         sessionStorage.removeItem('refresh_token')
     })
@@ -56,12 +62,12 @@ function queryFetchNonAuth(query) {
     }).then(res => res.json())
 }
 
-function queryFetch(query, token) {
+function queryFetch(query) {
     return fetch(process.env.REACT_APP_GRAPH_QL_URI, {
         method: "POST",
         headers: { 
             "Content-Type" : "application/json", 
-            "Authorization" : `BEARER ${token}`},
+            "Authorization" : `BEARER ${sessionStorage.getItem("access_token")}`},
         body: JSON.stringify({
             query: query
         })

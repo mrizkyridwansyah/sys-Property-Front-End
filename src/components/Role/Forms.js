@@ -20,7 +20,7 @@ export default function Forms() {
                 name
             }
         }`;
-        queryFetch(query, sessionStorage.getItem('access_token')).then(data => setCurrentRole(data.data.role.name))
+        queryFetch(query).then(data => setCurrentRole(data.data.role.name))
     }
 
     async function handleSubmit(e){
@@ -41,7 +41,7 @@ export default function Forms() {
         try {
             setError("")
             setLoading(true)
-            await queryFetch(query, sessionStorage.getItem('access_token')).then(data => {
+            await queryFetch(query).then(data => {
                 if(data.errors) throw new Error(data.errors[0].message)
             })
             history.push("/role")

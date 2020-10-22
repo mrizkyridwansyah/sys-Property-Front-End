@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react'
-import { Row, Col, Form, Button, Container, Card, Alert } from 'react-bootstrap'
+import { Row, Col, Form, Button, Container, Card, Alert, Spinner } from 'react-bootstrap'
 import { Link, useHistory } from 'react-router-dom'
 import ListRole from './ListRole'
 import { useAuth } from '../../contexts/AuthContext'
@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext'
 export default function Role() {
     const [hasDeleted, setHasDeleted] = useState(false)
     const [error, setError] = useState("")
+    const [loading, setLoading] = useState(false)
     const [roles, setRoles] = useState([])
     const keywordRef = useRef()
     const { queryFetch, logout } = useAuth()
@@ -34,7 +35,7 @@ export default function Role() {
                 }
             }`;
 
-            queryFetch(query,sessionStorage.getItem("access_token")).then(data => {
+            queryFetch(query).then(data => {
                 if(data.errors) return setError(data.errors[0].message)   
                 setHasDeleted(true)     
             })
@@ -42,6 +43,8 @@ export default function Role() {
     }
 
     function getRole(search = "") {
+        setError("")
+        setLoading(true)
         const query = `
         query {
             roles ${search}{
@@ -49,18 +52,18 @@ export default function Role() {
               name
             }
         }`;
-        queryFetch(query,sessionStorage.getItem("access_token")).then(async (data) => {
+        queryFetch(query).then(async (data) => {
             if(data.errors) {
-                console.log(data.errors[0].message)
                 if(data.errors[0].message === "Unauthorized") {
                     await logout(sessionStorage.getItem("refresh_token"));
-                    // history.push('/login')        
+                    history.push('/login')        
                 } else {
                     return setError(data.errors[0].message)
                 }                
             } 
             setRoles(data.data.roles)
         })
+        setLoading(false)
     }
 
     useEffect(() => {
@@ -90,6 +93,15 @@ export default function Role() {
                     </Row>
                     <Row>
                         <Col md="5">                            
+                            {
+                                loading && 
+                                <div className="mt-3">
+                                    <Spinner animation="grow" size="sm" className="mr-2" />
+                                    <Spinner animation="grow" size="sm" className="mr-2" />
+                                    <Spinner animation="grow" size="sm" className="mr-2" />
+                                    <Spinner animation="grow" size="sm" className="mr-2" />
+                                </div>
+                            }
                             <Card className="mt-3">
                                 {                                    
                                     roles.map(role => {
